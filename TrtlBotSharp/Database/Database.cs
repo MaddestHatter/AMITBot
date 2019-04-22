@@ -22,6 +22,10 @@ namespace TrtlBotSharp
                 "coinsrecv BIGINT DEFAULT 0, redirect BOOLEAN DEFAULT 0)", Database);
             UsersTableCreationCommand.ExecuteNonQuery();
 
+            //Attempt to create a operators table
+            SqliteCommand OperatorsTableCreationCommand = new SqliteCommand("CREATE TABLE IF NOT EXISTS operators (uid INT UNIQUE)" ,Database);
+            OperatorsTableCreationCommand.ExecuteNonQuery();
+            
             // Attempt to create transactions table
             SqliteCommand TransactionsTableCreationCommand = new SqliteCommand("CREATE TABLE IF NOT EXISTS transactions (createdat TIMESTAMP, type TINYTEXT, amount BIGINT, paymentid VARCHAR(64), " +
                 "tx TEXT)", Database);
