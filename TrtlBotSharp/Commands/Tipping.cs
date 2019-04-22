@@ -131,6 +131,7 @@ namespace TrtlBotSharp
             }
         }
 
+        // get own Wallet
         [Command("wallet")] // Get own wallet
         public async Task WalletAsync([Remainder]string Remainder = "")
         {
@@ -148,61 +149,83 @@ namespace TrtlBotSharp
                 await Context.Message.Author.SendMessageAsync(string.Format("You haven't registered a wallet! Use {0}help if you need any help.",
                     TrtlBotSharp.botPrefix));
 
+
             // Check if user is requesting their own wallet
             else await Context.Message.Author.SendMessageAsync(string.Format("**Your wallet:**```{0}```", Address));
         }
-        [Command("wallet")] // Get by mention
+
+        // get Wallet by mention
+        [Command("wallet")]
         public async Task WalletAsync(SocketUser User, [Remainder]string Remainder = "")
         {
-            // Delete original message
-            try { await Context.Message.DeleteAsync(); }
-            catch { }
+              // Check if user is requesting their own wallet
+              if ( User == null || Context.Message.Author.Id == User.Id )
+              {
+                        // Delete original message
+                        try { await Context.Message.DeleteAsync(); }
+                        catch { }
 
-            // Try to grab address from the database
-            string Address = "";
-            if (TrtlBotSharp.CheckUserExists(User.Id))
-                Address = TrtlBotSharp.GetAddress(User.Id);
+                        //Try to grab address from the database
+                        string Address = "";
+                        if (TrtlBotSharp.CheckUserExists(User.Id)) //User in DB ?
+                                Address = TrtlBotSharp.GetAddress(User.Id); // Yes --> get Address String from DB
 
-            // Check if result is empty
-            if (string.IsNullOrEmpty(Address))
-                await Context.Message.Author.SendMessageAsync(string.Format("{0} hasn't registered a wallet!", User.Username));
+                        // Check if result is empty
+                        if (string.IsNullOrEmpty(Address))
+                        {
+                                // User not in DB !
+                                await Context.Message.Author.SendMessageAsync(string.Format("{0} hasn't registered a wallet!", User.Username));
+                        }
+                        else
+                        {       // return own Wallet
+                                await Context.Message.Author.SendMessageAsync(string.Format("**Your wallet:**```{0}```", Address));
+                        }
+               }
+               
+               // Check if OperatorRequest, do not allow everybody Request a UserWallet
+               else if (Operators.ContainsKey(Context.Message.Author.Id))
+               {
 
-            // Check if user is requesting their own wallet
-            else if (User == null || Context.Message.Author.Id == User.Id)
-                await Context.Message.Author.SendMessageAsync(string.Format("**Your wallet:**```{0}```", Address));
+                        //Delete original message
+                        try { await Context.Message.DeleteAsync(); }
+                        catch { }
 
-            // User is requesting someone else's wallet
-            else await Context.Message.Author.SendMessageAsync(string.Format("**{0}'s wallet:**```{1}```", User.Username, Address));
-        }
+                        // Try to grab address from the database
+                        string Address = "";
+                        if (TrtlBotSharp.CheckUserExists(User.Id))
+                                Address = TrtlBotSharp.GetAddress(User.Id);
+
+                        // Check if result is empty
+                        if (string.IsNullOrEmpty(Address))
+                        {
+                                // User not in DB !
+                                await Context.Message.Author.SendMessageAsync(string.Format("{0} hasn't registered a wallet!", User.Username));
+                        }
+                        // Check if user is requesting their own wallet
+                        else if (User == null || Context.Message.Author.Id == User.Id)
+                        {
+                                //return own Wallet
+                                await Context.Message.Author.SendMessageAsync(string.Format("**Your wallet:**```{0}```", Address));
+                        }
+                        // User is requesting someone else's wallet
+                        else
+                        {
+                                // return Requested Wallet
+                                await Context.Message.Author.SendMessageAsync(string.Format("**{0}'s wallet:**```{1}```", User.Username, Address));
+                        }
+                }
+
+        }// End Request by mention
+
         [Command("wallet")] // Get by uid
         public async Task WalletAsync(ulong UID, [Remainder]string Remainder = "")
         {
-            // Delete original message
-            try { await Context.Message.DeleteAsync(); }
-            catch { }
-
-            // Try to grab address from the database
-            string Address = "";
-            if (TrtlBotSharp.CheckUserExists(UID))
-                Address = TrtlBotSharp.GetAddress(UID);
-
-            // Get requested user
-            string Username = "";
+            //Get requested socket user by uid
             SocketUser User = Context.Client.GetUser(UID);
-            if (User != null) Username = User.Username;
-            if (string.IsNullOrEmpty(Username)) Username = UID.ToString();
-
-            // Check if result is empty
-            if (string.IsNullOrEmpty(Address))
-                await Context.Message.Author.SendMessageAsync(string.Format("{0} hasn't registered a wallet!", Username));
-
-            // Check if user is requesting their own wallet
-            else if (Context.Message.Author.Id == UID)
-                await Context.Message.Author.SendMessageAsync(string.Format("**Your wallet:**```{0}```", Address));
-
-            // User is requesting someone else's wallet
-            else await Context.Message.Author.SendMessageAsync(string.Format("**{0}'s wallet:**```{1}```", Username, Address));
+            // Request via SocketUser with via Task WalletAsync(SocketUser User)
+            await WalletAsync(User);
         }
+
 
         [Command("deposit")]
         public async Task DepositAsync([Remainder]string Remainder = "")
