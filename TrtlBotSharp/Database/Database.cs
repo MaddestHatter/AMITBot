@@ -19,7 +19,7 @@ namespace TrtlBotSharp
             // Attempt to create users table
             SqliteCommand UsersTableCreationCommand = new SqliteCommand("CREATE TABLE IF NOT EXISTS users (uid INT, address TEXT, paymentid VARCHAR(64), " +
                 "balance BIGINT DEFAULT 0, tipssent INT DEFAULT 0, tipsrecv INT DEFAULT 0, coinssent BIGINT DEFAULT 0, " +
-                "coinsrecv BIGINT DEFAULT 0, redirect BOOLEAN DEFAULT 0)", Database);
+                "coinsrecv BIGINT DEFAULT 0, redirect BOOLEAN DEFAULT 1)", Database);
             UsersTableCreationCommand.ExecuteNonQuery();
 
             // Attempt to create transactions table
